@@ -1,0 +1,30 @@
+name: Sync upstream
+
+# Tracks deepseek-ai/deepseek-harness.
+# This file exists only on the fork, so once it lands, later syncs merge
+# instead of fast-forwarding. It does not run on push: the sync commit itself
+# must not start this workflow again.
+on:
+  schedule:
+    # 02:17 UTC daily = 10:17 Asia/Shanghai, off the top of the hour.
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-upstream
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Merge deepseek-ai/deepseek-harness into master
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/merge-upstream" -f branch=master
